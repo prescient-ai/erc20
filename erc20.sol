@@ -16,7 +16,7 @@ contract ERC20
 
     event Burn( address indexed FROM, uint256 VALUE);
     
-    function ERC20
+    constructor
     (
         uint256 INITIAL_SUPPLY,
         string  NAME,
@@ -50,6 +50,13 @@ contract ERC20
     function transfer(address TO, uint256 VALUE) public returns (bool success)
     {
         _transfer( msg.sender, TO, VALUE);
+        return true;
+    }
+    
+    
+    function transferIntegerAmount(address TO, uint256 VALUE) public returns (bool success)
+    {
+        _transfer( msg.sender, TO, VALUE*10**uint256( decimals));
         return true;
     }
 
@@ -90,13 +97,5 @@ contract ERC20
         allowance[ FROM][ msg.sender] -= VALUE;
         emit Burn( FROM, VALUE);
         return true;
-    }
-
-    function kill() public
-    {
-        if( msg.sender == m_Minter)
-        {
-            selfdestruct( m_Minter);
-        }
     }
 }
