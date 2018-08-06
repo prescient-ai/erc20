@@ -51,6 +51,7 @@ contract Crowdsale
     function () payable public
     {
         require( now < deadline);
+        require( amountRaised < maximumFundingGoal);
         uint amount = msg.value; 
         require( balanceOf[ msg.sender] + amount >= balanceOf[ msg.sender]);
         if(  amount + amountRaised > maximumFundingGoal)
@@ -69,7 +70,7 @@ contract Crowdsale
     
     modifier afterDeadline() 
     {
-        if( now >= deadline) 
+        if( now >= deadline || amountRaised >= maximumFundingGoal) 
         {
             _;
         }

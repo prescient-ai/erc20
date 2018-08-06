@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.24;
 
 contract ERC20
 {
@@ -29,6 +29,20 @@ contract ERC20
         name = NAME;
         symbol = SYMBOL;
     }
+    
+    function subtract( uint256 _a, uint256 _b) internal pure returns(uint256)
+    {
+        assert( _b <= _a);
+        return _a - _b;
+    }
+    
+    function add( uint256 _a, uint256 _b) internal pure returns(uint256 c)
+    {
+        c = _a + _b;
+        assert( c >= _a);
+        return c;
+    }
+    
 
     function balanceOf(address OWNER) public view returns (uint256 balance)
     {
@@ -39,12 +53,11 @@ contract ERC20
     {
         require( TO != 0x0);
         require( balanceOf[ FROM] >= VALUE);
-        require( balanceOf[ TO] + VALUE >= balanceOf[ TO]);
-        uint256 previous_balances = balanceOf[ FROM] + balanceOf[ TO];
-        balanceOf[ FROM] -= VALUE;
-        balanceOf[ TO] += VALUE;
+        uint256 previous_balances = add( balanceOf[ FROM], balanceOf[ TO]);
+        balanceOf[ FROM] = subtract( balanceOf[ FROM], VALUE);
+        balanceOf[ TO] = add( balanceOf[ TO], VALUE);
         emit Transfer( FROM, TO, VALUE);
-        assert( balanceOf[ FROM] + balanceOf[ TO] == previous_balances);
+        assert( add( balanceOf[ FROM], balanceOf[ TO]) == previous_balances);
     }
     
     function transfer(address TO, uint256 VALUE) public returns (bool success)
@@ -63,8 +76,8 @@ contract ERC20
     function transferFrom(address FROM, address TO, uint256 VALUE) public returns (bool success)
     {
         require( VALUE <= allowance[ FROM][ msg.sender]);
-        allowance[ FROM][ msg.sender] -= VALUE;
         _transfer( FROM, TO, VALUE);
+        allowance[ FROM][ msg.sender] = subtract( allowance[ FROM][ msg.sender], VALUE);
         return true;
     }
 
@@ -82,8 +95,8 @@ contract ERC20
     function burn( uint256 VALUE) public returns ( bool success)
     {
         require( balanceOf[ msg.sender] >= VALUE);
-        balanceOf[ msg.sender] -= VALUE;
-        totalSupply -= VALUE;
+        balanceOf[ msg.sender] = subtract( balanceOf[ msg.sender], VALUE);
+        totalSupply = subtract( totalSupply , VALUE);
         emit Burn( msg.sender, VALUE);
         return true;
     }
@@ -92,9 +105,9 @@ contract ERC20
     {
         require( balanceOf[ FROM] >= VALUE);
         require( allowance[ FROM][ msg.sender] >= VALUE);
-        balanceOf[ FROM] -= VALUE;
-        totalSupply -= VALUE;
-        allowance[ FROM][ msg.sender] -= VALUE;
+        balanceOf[ FROM] = subtract( balanceOf[ FROM], VALUE);
+        totalSupply = subtract( totalSupply, VALUE);
+        allowance[ FROM][ msg.sender] = subtract( allowance[ FROM][ msg.sender], VALUE);
         emit Burn( FROM, VALUE);
         return true;
     }
