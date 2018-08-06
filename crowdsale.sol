@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.24;
 
 interface token 
 {
@@ -48,24 +48,41 @@ contract Crowdsale
         tokenLockdownAmount = numberIntegerTokensToHold*10**uint256( tokenReward.decimals());
     }
     
-    function () payable public
+    function subtract( uint256 _a, uint256 _b) internal pure returns(uint256)
+    {
+        assert( _b <= _a);
+        return _a - _b;
+    }
+    
+    function add( uint256 _a, uint256 _b) internal pure returns(uint256 c)
+    {
+        c = _a + _b;
+        assert( c >= _a);
+        return c;
+    }
+    
+    function () payable external
+    {
+        contribute();
+    }
+    
+    function contribute() public payable
     {
         require( now < deadline);
         require( amountRaised < maximumFundingGoal);
         uint amount = msg.value; 
-        require( balanceOf[ msg.sender] + amount >= balanceOf[ msg.sender]);
-        if(  amount + amountRaised > maximumFundingGoal)
+        if(  add( amount, amountRaised) > maximumFundingGoal)
         {
-            uint refund = amount + amountRaised - maximumFundingGoal;
-            require( refund + maximumFundingGoal == amount + amountRaised);
-            overPayRefundOf[ msg.sender] += refund;
-            amount = maximumFundingGoal - amountRaised;
+            uint refund = subtract( add( amount, amountRaised), maximumFundingGoal);
+            require( add( refund, maximumFundingGoal) == add( amount, amountRaised));
+            overPayRefundOf[ msg.sender] = refund;
+            amount = subtract( maximumFundingGoal, amountRaised);
         }
         require( amount > 0);
-        balanceOf[msg.sender] += amount;
-        amountRaised += amount;
+        balanceOf[msg.sender] = add( balanceOf[msg.sender], amount);
+        amountRaised = add( amountRaised, amount);
         tokenReward.transfer( msg.sender, amount / price);
-        emit FundTransfer( msg.sender, amount, true);
+        emit FundTransfer( msg.sender, amount, true);        
     }
     
     modifier afterDeadline() 
